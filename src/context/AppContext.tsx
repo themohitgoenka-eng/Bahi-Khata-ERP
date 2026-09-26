@@ -451,6 +451,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   }, []);
 
+  // Responsive: keep the sidebar as a compact icon-rail on tablet/mobile so the
+  // main content always gets full width (transient — does not overwrite the
+  // user's desktop pin preference in localStorage).
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const applyResponsive = () => {
+      if (window.innerWidth < 768) setIsSidebarOpen(false);
+    };
+    applyResponsive();
+    window.addEventListener('resize', applyResponsive);
+    return () => window.removeEventListener('resize', applyResponsive);
+  }, []);
+
   const [accountGroups, setAccountGroups] = useState<AccountGroup[]>([]);
   const [ledgers, setLedgers] = useState<Ledger[]>([]);
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);

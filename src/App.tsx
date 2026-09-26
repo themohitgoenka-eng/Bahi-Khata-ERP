@@ -3,7 +3,6 @@ import { AppProvider, useApp } from './context/AppContext';
 import { Header } from './components/layout/Header';
 import { Sidebar } from './components/layout/Sidebar';
 import { WorkspaceTaskbar } from './components/layout/WorkspaceTaskbar';
-import { DashboardView } from './components/dashboard/DashboardView';
 import { VoucherEntryModal } from './components/accounting/VoucherEntryModal';
 import { SalesInvoiceModal } from './components/SalesInvoiceModal';
 import { Wrench, Receipt, Loader2 } from 'lucide-react';
@@ -16,6 +15,7 @@ import { VoucherType } from './types';
 const named = <T extends Record<string, any>>(p: Promise<T>, key: keyof T) =>
   p.then((m) => ({ default: m[key] as React.ComponentType<any> }));
 
+const DashboardView = lazy(() => named(import('./components/dashboard/DashboardView'), 'DashboardView'));
 const VoucherRegisterView = lazy(() => named(import('./components/accounting/VoucherRegisterView'), 'VoucherRegisterView'));
 const DayBookView = lazy(() => named(import('./components/accounting/DayBookView'), 'DayBookView'));
 const LedgerView = lazy(() => named(import('./components/accounting/LedgerView'), 'LedgerView'));
