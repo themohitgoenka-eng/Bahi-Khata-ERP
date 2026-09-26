@@ -140,9 +140,10 @@ export const SalesInvoiceModal: React.FC<{
   nextBillNo?: string;
   formType?: "sales_invoice" | "purchase_invoice" | "spare_parts_purchase";
   defaultPrintView?: boolean;
+  ownerKey?: string;
   onClose: () => void;
   onSaveSuccess: () => void;
-}> = ({ initialData, nextBillNo = "", formType = "sales_invoice", defaultPrintView = false, onClose, onSaveSuccess }) => {
+}> = ({ initialData, nextBillNo = "", formType = "sales_invoice", defaultPrintView = false, ownerKey = "voucher", onClose, onSaveSuccess }) => {
   const {
     showNotification,
     currentCompany,
@@ -424,6 +425,7 @@ export const SalesInvoiceModal: React.FC<{
     setMinimizedInvoice({
       title: isSpareParts ? "Spare Parts Bill" : isPurchase ? "Purchase Bill" : "Sale Bill",
       formType,
+      ownerId: ownerKey,
       billNo: billNo || nextBillNo || "New",
       party: party || "Cash Sale",
     });

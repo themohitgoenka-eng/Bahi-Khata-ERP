@@ -1263,12 +1263,13 @@ export const TransactionCrudTable: React.FC<TransactionCrudTableProps> = ({
       )}
 
       {/* Sales & Spare Parts Invoice Dedicated Modal */}
-      {(isInvoiceModalOpen || (minimizedInvoice && minimizedInvoice.formType === formType)) && (
+      {(isInvoiceModalOpen || (minimizedInvoice && minimizedInvoice.ownerId === ('table-' + formType))) && (
         <SalesInvoiceModal
           initialData={selectedRecord}
           nextBillNo={nextRefNo}
           formType={formType === 'spare_parts_purchase' ? 'spare_parts_purchase' : formType === 'purchase_invoice' ? 'purchase_invoice' : 'sales_invoice'}
           defaultPrintView={openInPrintView}
+          ownerKey={'table-' + formType}
           onClose={() => {
             setIsInvoiceModalOpen(false);
             setSelectedRecord(null);

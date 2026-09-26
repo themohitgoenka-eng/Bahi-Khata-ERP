@@ -301,11 +301,12 @@ const MainLayout: React.FC = () => {
       </div>
 
       {/* Global Voucher Entry Modal */}
-      {(isVoucherModalOpen || voucherModalOpen || (minimizedInvoice && (minimizedInvoice.formType === 'sales_invoice' || minimizedInvoice.formType === 'purchase_invoice'))) && (
-        (voucherModalType === 'SALES' || voucherModalType === 'PURCHASE' || minimizedInvoice?.formType === 'sales_invoice' || minimizedInvoice?.formType === 'purchase_invoice') ? (
+      {(voucherModalOpen || minimizedInvoice?.ownerId === 'voucher') && (
+        ((voucherModalType === 'SALES' || voucherModalType === 'PURCHASE') || (minimizedInvoice?.ownerId === 'voucher' && !voucherModalOpen)) ? (
           <SalesInvoiceModal
             initialData={editingVoucher}
             formType={voucherModalType === 'PURCHASE' ? 'purchase_invoice' : 'sales_invoice'}
+            ownerKey="voucher"
             onClose={closeVoucherModal}
             onSaveSuccess={() => {
               closeVoucherModal();

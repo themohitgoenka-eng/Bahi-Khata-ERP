@@ -95,10 +95,11 @@ interface AppContextType {
   minimizedInvoice: {
     title: string;
     formType: string;
+    ownerId?: string;
     billNo: string;
     party?: string;
   } | null;
-  setMinimizedInvoice: (info: { title: string; formType: string; billNo: string; party?: string } | null) => void;
+  setMinimizedInvoice: (info: { title: string; formType: string; ownerId?: string; billNo: string; party?: string } | null) => void;
   restoreMinimizedInvoice: () => void;
   closeMinimizedInvoice: () => void;
   registerRestoreInvoiceHandler: (handler: (() => void) | null) => void;
@@ -532,6 +533,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [minimizedInvoice, setMinimizedInvoice] = useState<{
     title: string;
     formType: string;
+    ownerId?: string;
     billNo: string;
     party?: string;
   } | null>(null);
