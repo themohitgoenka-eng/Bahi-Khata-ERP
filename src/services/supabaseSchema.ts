@@ -373,3 +373,39 @@ $$;
 
 GRANT EXECUTE ON FUNCTION create_app_table_if_missing(text, jsonb) TO anon, authenticated;
 `;
+
+// ---------------------------------------------------------------------------
+// One-click setup helpers
+// ---------------------------------------------------------------------------
+
+// All core tables the ERP expects in Supabase.
+export const EXPECTED_TABLES: string[] = [
+  'companies',
+  'fiscal_years',
+  'account_groups',
+  'ledgers',
+  'inventory_items',
+  'locations',
+  'vouchers',
+  'bank_accounts',
+  'item_units',
+  'stock_transactions',
+  'stock_journals',
+  'wastage_entries',
+  'bank_transactions',
+  'audit_logs',
+  'app_dynamic_entities',
+];
+
+// Build the Supabase SQL Editor deep-link from a project URL like
+// https://<ref>.supabase.co  ->  https://supabase.com/dashboard/project/<ref>/sql/new
+export const getSqlEditorUrl = (projectUrl: string): string => {
+  try {
+    const host = new URL(projectUrl).host; // <ref>.supabase.co
+    const ref = host.split('.')[0];
+    if (ref) return `https://supabase.com/dashboard/project/${ref}/sql/new`;
+  } catch {
+    /* ignore */
+  }
+  return 'https://supabase.com/dashboard/project/_/sql/new';
+};

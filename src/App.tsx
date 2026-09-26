@@ -1,37 +1,44 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, lazy, Suspense } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { Header } from './components/layout/Header';
 import { Sidebar } from './components/layout/Sidebar';
 import { WorkspaceTaskbar } from './components/layout/WorkspaceTaskbar';
 import { DashboardView } from './components/dashboard/DashboardView';
-import { VoucherRegisterView } from './components/accounting/VoucherRegisterView';
-import { DayBookView } from './components/accounting/DayBookView';
-import { LedgerView } from './components/accounting/LedgerView';
-import { CashBookView } from './components/accounting/CashBookView';
-import { ChartOfAccountsView } from './components/accounting/ChartOfAccountsView';
-import { ItemMasterView } from './components/master/ItemMasterView';
-import { SparePartsMasterView } from './components/master/SparePartsMasterView';
-import { LocationMasterView } from './components/master/LocationMasterView';
-import { CityStateMasterView } from './components/master/CityStateMasterView';
 import { VoucherEntryModal } from './components/accounting/VoucherEntryModal';
 import { SalesInvoiceModal } from './components/SalesInvoiceModal';
-import { BankAccountsView } from './components/banking/BankAccountsView';
-import { BankReconciliationView } from './components/banking/BankReconciliationView';
-import { StockSummaryView } from './components/inventory/StockSummaryView';
-import { StockJournalView } from './components/inventory/StockJournalView';
-import { StockLedgerView } from './components/inventory/StockLedgerView';
-import { WastageAnalysisView } from './components/inventory/WastageAnalysisView';
-import { TrialBalanceView } from './components/financial/TrialBalanceView';
-import { ProfitLossView } from './components/financial/ProfitLossView';
-import { BalanceSheetView } from './components/financial/BalanceSheetView';
-import { OutstandingView } from './components/financial/OutstandingView';
-import { SyncCenterView } from './components/sync/SyncCenterView';
-import { CompanyDataView } from './components/company/CompanyDataView';
-import { SalesView } from './components/sales/SalesView';
-import { TransactionCrudTable } from './components/TransactionCrudTable';
-import { Wrench, Receipt } from 'lucide-react';
+import { Wrench, Receipt, Loader2 } from 'lucide-react';
 import { shortcutService } from './services/shortcutService';
 import { VoucherType } from './types';
+
+// --- Route-level code splitting: heavy views are lazily loaded on demand ---
+// This keeps the initial bundle small (dashboard + shell only); reports,
+// inventory, banking & PDF/Excel-export views load their JS only when opened.
+const named = <T extends Record<string, any>>(p: Promise<T>, key: keyof T) =>
+  p.then((m) => ({ default: m[key] as React.ComponentType<any> }));
+
+const VoucherRegisterView = lazy(() => named(import('./components/accounting/VoucherRegisterView'), 'VoucherRegisterView'));
+const DayBookView = lazy(() => named(import('./components/accounting/DayBookView'), 'DayBookView'));
+const LedgerView = lazy(() => named(import('./components/accounting/LedgerView'), 'LedgerView'));
+const CashBookView = lazy(() => named(import('./components/accounting/CashBookView'), 'CashBookView'));
+const ChartOfAccountsView = lazy(() => named(import('./components/accounting/ChartOfAccountsView'), 'ChartOfAccountsView'));
+const ItemMasterView = lazy(() => named(import('./components/master/ItemMasterView'), 'ItemMasterView'));
+const SparePartsMasterView = lazy(() => named(import('./components/master/SparePartsMasterView'), 'SparePartsMasterView'));
+const LocationMasterView = lazy(() => named(import('./components/master/LocationMasterView'), 'LocationMasterView'));
+const CityStateMasterView = lazy(() => named(import('./components/master/CityStateMasterView'), 'CityStateMasterView'));
+const BankAccountsView = lazy(() => named(import('./components/banking/BankAccountsView'), 'BankAccountsView'));
+const BankReconciliationView = lazy(() => named(import('./components/banking/BankReconciliationView'), 'BankReconciliationView'));
+const StockSummaryView = lazy(() => named(import('./components/inventory/StockSummaryView'), 'StockSummaryView'));
+const StockJournalView = lazy(() => named(import('./components/inventory/StockJournalView'), 'StockJournalView'));
+const StockLedgerView = lazy(() => named(import('./components/inventory/StockLedgerView'), 'StockLedgerView'));
+const WastageAnalysisView = lazy(() => named(import('./components/inventory/WastageAnalysisView'), 'WastageAnalysisView'));
+const TrialBalanceView = lazy(() => named(import('./components/financial/TrialBalanceView'), 'TrialBalanceView'));
+const ProfitLossView = lazy(() => named(import('./components/financial/ProfitLossView'), 'ProfitLossView'));
+const BalanceSheetView = lazy(() => named(import('./components/financial/BalanceSheetView'), 'BalanceSheetView'));
+const OutstandingView = lazy(() => named(import('./components/financial/OutstandingView'), 'OutstandingView'));
+const SyncCenterView = lazy(() => named(import('./components/sync/SyncCenterView'), 'SyncCenterView'));
+const CompanyDataView = lazy(() => named(import('./components/company/CompanyDataView'), 'CompanyDataView'));
+const SalesView = lazy(() => named(import('./components/sales/SalesView'), 'SalesView'));
+const TransactionCrudTable = lazy(() => named(import('./components/TransactionCrudTable'), 'TransactionCrudTable'));
 
 const MainLayout: React.FC = () => {
   const {
@@ -278,7 +285,16 @@ const MainLayout: React.FC = () => {
           
           <main className="flex-1 overflow-y-auto min-h-0 bg-transparent px-2.5 sm:px-3.5 pt-2 pb-3.5">
             <div className="w-full">
-              {renderActiveView()}
+              <Suspense
+                fallback={
+                  <div className="flex items-center justify-center py-24 text-app-text-muted gap-2 text-sm">
+                    <Loader2 className="w-5 h-5 animate-spin text-app-primary" />
+                    <span>Loading module…</span>
+                  </div>
+                }
+              >
+                {renderActiveView()}
+              </Suspense>
             </div>
           </main>
         </div>

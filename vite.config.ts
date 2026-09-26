@@ -18,6 +18,30 @@ export default defineConfig(() => {
     build: {
       outDir: 'dist',
       emptyOutDir: true,
+      chunkSizeWarningLimit: 1500,
+      rollupOptions: {
+        output: {
+          // Split heavy third-party libs into separate, cacheable vendor chunks
+          // so the initial payload is smaller and downloads in parallel.
+          manualChunks(id: string) {
+            if (id.includes('node_modules')) {
+              if (id.includes('xlsx')) return 'vendor-xlsx';
+              if (
+                id.includes('jspdf') ||
+                id.includes('html2canvas') ||
+                id.includes('dompurify') ||
+                id.includes('html-to-image')
+              )
+                return 'vendor-pdf';
+              if (id.includes('@supabase')) return 'vendor-supabase';
+              if (id.includes('@tanstack')) return 'vendor-query';
+              if (id.includes('localforage')) return 'vendor-storage';
+              if (id.includes('lucide-react')) return 'vendor-icons';
+              return 'vendor';
+            }
+          },
+        },
+      },
     },
     server: {
       host: '0.0.0.0',

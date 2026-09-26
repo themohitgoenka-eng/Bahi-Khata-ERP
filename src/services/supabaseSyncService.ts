@@ -27,6 +27,111 @@ export class SupabaseSyncService {
   }
 
   /**
+   * Probe each expected table to see whether it exists in Supabase.
+   * Returns a status list without throwing.
+   */
+  public async checkAllTables(): Promise<{ table: string; exists: boolean }[]> {
+    const { EXPECTED_TABLES } = await import('./supabaseSchema');
+    const client = getSupabaseClient();
+    if (!client) return EXPECTED_TABLES.map((t) => ({ table: t, exists: false }));
+
+    const results = await Promise.all(
+      EXPECTED_TABLES.map(async (table) => {
+        try {
+          const { error } = await client.from(table).select('id').limit(1);
+          // Missing-table error codes from PostgREST
+          const missing =
+            !!error &&
+            (error.code === 'PGRST205' ||
+              error.code === '42P01' ||
+              /does not exist|not find the table/i.test(error.message || ''));
+          return { table, exists: !missing };
+        } catch {
+          return { table, exists: false };
+        }
+      })
+    );
+    return results;
+  }
+
+  /**
+   * One-click initialize: attempts to create every expected table via the
+   * create_app_table_if_missing RPC (requires the bootstrap SQL to have been
+   * run once so that RPC exists). Returns a per-table result summary.
+   */
+  public async initializeAllTables(): Promise<{
+    success: boolean;
+    created: number;
+    failed: number;
+    total: number;
+    rpcAvailable: boolean;
+    results: { table: string; ok: boolean }[];
+    message: string;
+  }> {
+    const { EXPECTED_TABLES } = await import('./supabaseSchema');
+    const client = getSupabaseClient();
+    if (!client) {
+      return {
+        success: false,
+        created: 0,
+        failed: EXPECTED_TABLES.length,
+        total: EXPECTED_TABLES.length,
+        rpcAvailable: false,
+        results: EXPECTED_TABLES.map((t) => ({ table: t, ok: false })),
+        message: 'Supabase is not configured.',
+      };
+    }
+
+    // Detect whether the bootstrap RPC exists
+    let rpcAvailable = true;
+    try {
+      const probe = await client.rpc('create_app_table_if_missing', {
+        p_table_name: 'companies',
+        p_columns: {},
+      });
+      if (probe.error && /function .* does not exist|could not find/i.test(probe.error.message || '')) {
+        rpcAvailable = false;
+      }
+    } catch {
+      rpcAvailable = false;
+    }
+
+    if (!rpcAvailable) {
+      return {
+        success: false,
+        created: 0,
+        failed: EXPECTED_TABLES.length,
+        total: EXPECTED_TABLES.length,
+        rpcAvailable: false,
+        results: EXPECTED_TABLES.map((t) => ({ table: t, ok: false })),
+        message:
+          'Bootstrap not found. Please run the "Copy SQL Schema" script once in the Supabase SQL Editor, then retry one-click init.',
+      };
+    }
+
+    const results: { table: string; ok: boolean }[] = [];
+    for (const table of EXPECTED_TABLES) {
+      const ok = await this.ensureTable(table, {});
+      results.push({ table, ok });
+    }
+    const created = results.filter((r) => r.ok).length;
+    const failed = results.length - created;
+    return {
+      success: failed === 0,
+      created,
+      failed,
+      total: results.length,
+      rpcAvailable: true,
+      results,
+      message:
+        failed === 0
+          ? `All ${created} tables are initialized and ready.`
+          : `${created} ready, ${failed} could not be created automatically.`,
+    };
+  }
+
+
+  /**
    * Process a single queued item to Supabase table
    */
   public async processQueueItem(item: SyncQueueItem): Promise<{ success: boolean; error?: string }> {
