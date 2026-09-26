@@ -1,0 +1,239 @@
+@import "tailwindcss";
+
+@theme {
+  --color-app-bg: #06111F;
+  --color-app-secondary: #081A2D;
+  --color-app-navy: #0A2036;
+  --color-app-primary: #2588E8;
+  --color-app-bright: #39A7FF;
+  --color-app-cyan: #52C7FF;
+  --color-app-success: #55D68A;
+  --color-app-warning: #F2C94C;
+  --color-app-danger: #FF647C;
+  --color-app-purple: #9B7CFF;
+  --color-app-text-primary: #F1F7FC;
+  --color-app-text-secondary: #B7C9D9;
+  --color-app-text-muted: #7F98AE;
+  --color-app-text-disabled: #5C7184;
+}
+
+:root {
+  --bg-main: #06111F;
+  --bg-secondary: #081A2D;
+  --bg-deep-navy: #0A2036;
+
+  --glass-surface: rgba(18, 48, 76, 0.48);
+  --glass-surface-light: rgba(32, 70, 105, 0.42);
+  --glass-surface-dark: rgba(8, 27, 46, 0.62);
+
+  --border: rgba(112, 185, 245, 0.28);
+  --border-strong: rgba(100, 190, 255, 0.45);
+
+  --primary-blue: #2588E8;
+  --bright-blue: #39A7FF;
+  --cyan-accent: #52C7FF;
+  --success-green: #55D68A;
+  --warning-gold: #F2C94C;
+  --danger-red: #FF647C;
+  --purple-accent: #9B7CFF;
+
+  --text-primary: #F1F7FC;
+  --text-secondary: #B7C9D9;
+  --text-muted: #7F98AE;
+  --text-disabled: #5C7184;
+
+  --input-bg: rgba(8, 30, 51, 0.55);
+  --hover-bg: rgba(55, 120, 175, 0.18);
+  --selected-bg: rgba(37, 136, 232, 0.20);
+}
+
+@layer base {
+  html, body, #root {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    background-color: #06111F;
+    background-image: 
+      radial-gradient(ellipse 70% 45% at 85% 0%, rgba(37, 136, 232, 0.16) 0%, transparent 65%),
+      radial-gradient(ellipse 65% 50% at 10% 85%, rgba(82, 199, 255, 0.12) 0%, transparent 60%),
+      radial-gradient(ellipse 55% 40% at 50% 50%, rgba(10, 32, 54, 0.40) 0%, transparent 70%);
+    background-attachment: fixed;
+    color: #F1F7FC;
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    overflow: hidden;
+  }
+
+  /* Consistent typography */
+  h1, h2, h3, h4 {
+    color: #F1F7FC;
+  }
+
+  /* Rule 1: All default UI text (headers, table headers, labels, badges) - 1st alphabet Capital, rest small */
+  .uppercase:not(input):not(textarea) {
+    text-transform: capitalize !important;
+  }
+
+  thead th,
+  th,
+  label,
+  .table-header,
+  .card-header,
+  .badge-header {
+    text-transform: capitalize;
+  }
+
+  /* Rule 2: All user input fields - always in CAPITAL LETTERS, regardless of Caps Lock */
+  input[type="text"],
+  input[type="search"],
+  input:not([type]),
+  textarea {
+    text-transform: uppercase !important;
+  }
+
+  /* Placeholders follow default app text (1st letter capital, rest small) */
+  input[type="text"]::placeholder,
+  input[type="search"]::placeholder,
+  input:not([type])::placeholder,
+  textarea::placeholder {
+    text-transform: capitalize !important;
+  }
+
+  /* Global Dropdown (<select> and <option>) Theme: Match field color instead of grey */
+  select {
+    background-color: rgba(18, 48, 76, 0.48);
+    color: #F1F7FC;
+  }
+
+  select option,
+  select optgroup {
+    background-color: #081A2D !important;
+    color: #F1F7FC !important;
+  }
+
+  select option:checked,
+  select option:hover,
+  select option:focus {
+    background-color: #123356 !important;
+    color: #FFFFFF !important;
+  }
+}
+
+/* Display Font Class for Major Page / Section Titles */
+.font-display {
+  font-family: 'DM Serif Display', Georgia, serif;
+  letter-spacing: -0.01em;
+}
+
+/* Glassmorphism System Classes */
+.glass-panel {
+  background: rgba(18, 48, 76, 0.48);
+  border: 1px solid rgba(112, 185, 245, 0.25);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.30), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.glass-card {
+  background: rgba(18, 48, 76, 0.45);
+  border: 1px solid rgba(112, 185, 245, 0.25);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-radius: 18px;
+  transition: all 180ms ease;
+}
+.glass-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(100, 190, 255, 0.45);
+}
+
+.solid-card {
+  background: rgba(18, 48, 76, 0.45);
+  border: 1px solid rgba(112, 185, 245, 0.25);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 16px;
+}
+
+.report-surface {
+  background: rgba(13, 38, 62, 0.48);
+  border: 1px solid rgba(112, 185, 245, 0.22);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.glass-surface {
+  background: rgba(18, 48, 76, 0.48);
+  border: 1px solid rgba(112, 185, 245, 0.25);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.30), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+/* Primary Glass Button */
+.btn-primary-forest {
+  background: linear-gradient(135deg, rgba(37, 136, 232, 0.90), rgba(42, 107, 180, 0.90));
+  color: #F1F7FC;
+  font-weight: 600;
+  border: 1px solid rgba(82, 199, 255, 0.45);
+  box-shadow: 0 6px 18px rgba(37, 136, 232, 0.20);
+  transition: all 180ms ease;
+}
+.btn-primary-forest:hover {
+  filter: brightness(1.10);
+  box-shadow: 0 8px 22px rgba(37, 136, 232, 0.35);
+}
+
+/* Secondary Glass Button */
+.btn-secondary-forest {
+  background: rgba(30, 67, 98, 0.55);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #B7C9D9;
+  border: 1px solid rgba(112, 185, 245, 0.25);
+  transition: all 180ms ease;
+}
+.btn-secondary-forest:hover {
+  background: rgba(55, 120, 175, 0.30);
+  color: #F1F7FC;
+  border-color: rgba(100, 190, 255, 0.45);
+}
+
+/* Glass Form Input Class */
+.forest-input {
+  background-color: rgba(8, 30, 51, 0.55);
+  border: 1px solid rgba(112, 185, 245, 0.22);
+  color: #F1F7FC;
+  transition: border-color 180ms ease, box-shadow 180ms ease;
+}
+.forest-input:focus {
+  outline: none;
+  border-color: #39A7FF;
+  box-shadow: 0 0 0 3px rgba(57, 167, 255, 0.10);
+}
+.forest-input::placeholder {
+  color: #7F98AE;
+}
+
+/* Custom Glass Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(112, 185, 245, 0.25);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(82, 199, 255, 0.40);
+}
