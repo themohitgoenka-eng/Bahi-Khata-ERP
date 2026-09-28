@@ -27,8 +27,20 @@ export function matchesAdvancedSearch(text: string | undefined | null, query: st
 }
 
 /**
- * Filter an array of items by checking multiple fields with tokenized advanced search.
+ * Unified dropdown ordering used across the ERP: pure-number / number-first entries
+ * come BEFORE alphabetic entries, and within each group we use natural (numeric-aware)
+ * ordering so "Item 2" sorts before "Item 10".
  */
+export function smartCompare(a: string | undefined | null, b: string | undefined | null): number {
+  const aStr = (a || '').trim();
+  const bStr = (b || '').trim();
+  const aStartsNum = /^[0-9]/.test(aStr);
+  const bStartsNum = /^[0-9]/.test(bStr);
+  if (aStartsNum && !bStartsNum) return -1; // numbers first
+  if (!aStartsNum && bStartsNum) return 1;
+  return aStr.localeCompare(bStr, undefined, { numeric: true, sensitivity: 'base' });
+}
+
 export function filterByAdvancedSearch<T>(
   items: T[],
   query: string,

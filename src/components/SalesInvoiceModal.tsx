@@ -962,12 +962,25 @@ export const SalesInvoiceModal: React.FC<{
 
   const handleKachaChange = (rawVal: string) => {
     setKacha(rawVal);
-    const hasKachaSundry = billSundries.some(
-      (s) => s.isPercentage && s.calculateOn === "KACHA"
+    const clean = rawVal.replace(/,/g, "").trim();
+    // Reciprocal auto-calc: Pakka + Kacha = Grand Total, so editing Kacha
+    // auto-computes Pakka = Grand Total - Kacha.
+    let newPakkaStr = pakka;
+    if (clean === "") {
+      newPakkaStr = "";
+      setPakka("");
+    } else if (!isNaN(Number(clean))) {
+      const kNum = parseNumberValue(rawVal);
+      const pDiff = Number((grandTotal - kNum).toFixed(2));
+      newPakkaStr = formatIndianNumberWithDecimals(pDiff);
+      setPakka(newPakkaStr);
+    }
+    const hasPakkaOrKachaSundry = billSundries.some(
+      (s) => s.isPercentage && (s.calculateOn === "PAKKA" || s.calculateOn === "KACHA")
     );
-    if (hasKachaSundry) {
+    if (hasPakkaOrKachaSundry) {
       setBillSundries((prev) =>
-        recalculateSundries(prev, itemTotal, series, pakka, rawVal)
+        recalculateSundries(prev, itemTotal, series, newPakkaStr, rawVal)
       );
     }
   };
@@ -976,13 +989,18 @@ export const SalesInvoiceModal: React.FC<{
     const clean = String(kacha).replace(/,/g, "").trim();
     if (clean === "" || clean === "0" || clean === "0.00") {
       setKacha("");
+      setPakka("");
     } else if (!isNaN(Number(clean))) {
       setKacha(formatIndianNumberWithDecimals(clean));
+      // keep Pakka in sync with the reciprocal value
+      const kNum = parseNumberValue(clean);
+      const pDiff = Number((grandTotal - kNum).toFixed(2));
+      setPakka(formatIndianNumberWithDecimals(pDiff));
     }
-    const hasKachaSundry = billSundries.some(
-      (s) => s.isPercentage && s.calculateOn === "KACHA"
+    const hasPakkaOrKachaSundry = billSundries.some(
+      (s) => s.isPercentage && (s.calculateOn === "PAKKA" || s.calculateOn === "KACHA")
     );
-    if (hasKachaSundry) {
+    if (hasPakkaOrKachaSundry) {
       setBillSundries((prev) =>
         recalculateSundries(prev, itemTotal, series, pakka, kacha)
       );

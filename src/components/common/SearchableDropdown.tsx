@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useLayoutEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronDown, Search, Plus, X, Check } from 'lucide-react';
-import { matchesAdvancedSearch } from '../../utils/searchUtils';
+import { matchesAdvancedSearch, smartCompare } from '../../utils/searchUtils';
 import { focusNextFormElement } from '../../utils/formUtils';
 
 export interface SearchableOption {
@@ -103,17 +103,23 @@ export const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
 
   // Filter options using Advanced Multi-Token Search (matches 2nd word, 3rd word, any order)
   const filteredOptions = useMemo(() => {
+    // Unified ordering: numbers before alphabets, natural numeric-aware within each group
+    const sortOpts = (arr: SearchableOption[]) =>
+      [...arr].sort((a, b) => smartCompare(a.label, b.label));
+
     // If search text matches the selected item label exactly, show all options
     if (selectedOption && searchText.trim() === selectedOption.label.trim()) {
-      return options;
+      return sortOpts(options);
     }
     const query = searchText.trim();
-    if (!query) return options;
+    if (!query) return sortOpts(options);
 
-    return options.filter((opt) => {
-      const targetText = `${opt.label} ${opt.subLabel || ''} ${opt.badge || ''}`;
-      return matchesAdvancedSearch(targetText, query);
-    });
+    return sortOpts(
+      options.filter((opt) => {
+        const targetText = `${opt.label} ${opt.subLabel || ''} ${opt.badge || ''}`;
+        return matchesAdvancedSearch(targetText, query);
+      })
+    );
   }, [options, searchText, selectedOption]);
 
   // Build combined navigation list: [AddOption?, CustomOption?, ...FilteredOptions]
