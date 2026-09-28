@@ -162,6 +162,42 @@ frontend:
         -agent: "testing"
         -comment: "✅ VERIFIED & WORKING: Tested the complete flow multiple times: (1) Opened Sale Bill (F8), (2) Clicked item dropdown in first row, (3) Selected '+ Add Item' to open Full Item Master form, (4) Filled item name (e.g., 'TEST GRANITE FINAL', 'VERIFY LEDGER TEST'), (5) Selected a Sales A/c ledger from dropdown (e.g., 'GST Sales 18%'), (6) Saved the item. RESULT: The item was successfully auto-filled into the Sale Bill row AND the ledger dropdown correctly displayed the selected Sales A/c ledger (e.g., 'GST SALES 18%'). Visual evidence from screenshots confirms the ledger value is populated in the item row's ledger column. The bug fix is WORKING CORRECTLY. Both root causes (field name mismatch salesAccountId vs salesAc, and stale state with explicitItem parameter) have been successfully resolved. The saved Sales/Purchase ledger now auto-fills the item-row ledger dropdown as expected."
 
+  - task: "Item Master: default category blank + auto-open category dropdown + tax inherits last-used"
+    implemented: true
+    working: "NA"
+    file: "src/components/master/FullItemMasterModal.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        -working: "NA"
+        -agent: "main"
+        -comment: "USER BUG (Issue 1): New item creation auto-selected category 'Kota Stone' and tax 18% (wrong accidental data). FIX: (1) default category is now '' (blank) so nothing is pre-selected; (2) category <select> auto-opens (showPicker + focus) when the form opens so user must pick; (3) tax % now inherits the LAST-USED value persisted in localStorage key 'bahi_khata_last_item_tax' (fallback 18) and is saved on each item create. Verify: open Sale Bill -> item dropdown -> + Add Item; on open the Category dropdown should be open/focused and NOT pre-filled with 'Kota Stone'; tax should reflect last saved tax (or 18 first time)."
+
+  - task: "SearchableDropdown: fix visual overlap of + Add and + Custom options"
+    implemented: true
+    working: "NA"
+    file: "src/components/common/SearchableDropdown.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        -working: "NA"
+        -agent: "main"
+        -comment: "USER BUG (Issue 2): In Sale Bill item dropdown the '+ Add Item' and '+ Type Custom Item' options visually overlapped (Add button was position:sticky top-0 inside the scroll list while Custom was normal flow, causing overlap on scroll). FIX: pulled BOTH the Add and Custom action buttons OUT of the scrollable list into a pinned (shrink-0) header block above the scroll container, with a divider between them. They now never overlap each other or scroll under one another. Verify: open item dropdown on row 1 AND on a newly added row 2 -> both options render as two clean, separated rows with no overlap; scrolling the list keeps them fixed and clear."
+
+  - task: "Sale Bill sundry tax isolation: multi tax sundries calc only on matching item tax group"
+    implemented: true
+    working: "NA"
+    file: "src/components/SalesInvoiceModal.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        -working: "NA"
+        -agent: "main"
+        -comment: "USER BUG (Issue 3): When a series has 2 different tax sundries (e.g. GST 18% and GST 5%) but the bill's items all map to ONE tax type, BOTH percentage tax sundries were calculating on the full subtotal. FIX in recalculateSundries(): group current item amounts by item.taxPercent; when there are >=2 tax-type percentage sundries (name matches GST/CGST/SGST/IGST/VAT/CESS/TAX) with calculateOn=SUB_TOTAL AND at least one item carries a tax %, each tax sundry now calculates ONLY on the sum of items whose tax rate it applies to (CGST/SGST use rate*2 as the target item group; IGST/GST use the rate directly). Non-matching tax sundries become 0. SAFETY: isolation only triggers with 2+ tax sundries + taxed items, so single-GST and CGST+SGST(same rate) bills keep computing on full subtotal as before. Verify: series with GST 18% + GST 5% sundries; add only 18% items -> 18% sundry = itemTotal*18%, 5% sundry = 0. Add mixed 18% & 5% items -> each sundry = its own group * rate. Also verify a normal single-tax bill still calculates on full subtotal."
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
@@ -169,7 +205,10 @@ metadata:
   run_ui: true
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "Item Master: default category blank + auto-open category dropdown + tax inherits last-used"
+    - "SearchableDropdown: fix visual overlap of + Add and + Custom options"
+    - "Sale Bill sundry tax isolation: multi tax sundries calc only on matching item tax group"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -187,3 +226,5 @@ agent_communication:
     -message: "NEW BUG FIX to verify (test_sequence 3): 'New item's saved Sales ledger not showing in Sale Bill item row ledger dropdown'. Please test ONLY this (skip the earlier two — already PASSED). App is a production build at https://antigravity-refactor.preview.emergentagent.com. STEPS: (1) If top bar shows 'Select Company/No FY', select a company (e.g. 'Shree Balaji Stone & Minerals') and a Fiscal Year. (2) Open a Sale Bill from the Dashboard '+ Sale Bill' launcher (or press F8). (3) In the first item row, open the item dropdown/input (id='sales_item_dropdown_0' or 'sales_item_input_0') and choose the '+ Add Item' option (value '__ADD_ITEM__') — this opens the Full Item Master form. (4) In that form: enter an item name, ensure a primary unit, and IMPORTANT select a 'Sales A/c' ledger from the Sales A/c dropdown (pick any existing ledger; if none exist, use '+ Add Ledger' to create one, e.g. 'SALES ACCOUNT'). Save/create the item. (5) After creation the item is auto-added to the row. VERIFY: the row's ledger dropdown (id='sales_item_ledger_0') now shows/【selected value equals】the Sales A/c ledger you chose for that item — it must NOT be blank. Report PASS/FAIL with the observed selected value of #sales_item_ledger_0. NOTE: client-only SPA, no /api backend; ignore Supabase 401/PGRST console errors."
     -agent: "testing"
     -message: "✅ TEST SEQUENCE 3 COMPLETED - BUG FIX VERIFIED WORKING! Tested the complete flow multiple times: Created new items ('TEST GRANITE FINAL', 'VERIFY LEDGER TEST') with Sales A/c ledger 'GST Sales 18%' selected in the Item Master form. After saving, the items were successfully auto-filled into the Sale Bill rows AND the ledger dropdown correctly displayed 'GST SALES 18%' (matching the selected Sales A/c). Visual evidence from screenshots confirms the ledger value is populated. The two root causes (field name mismatch salesAccountId vs salesAc, and stale state issue) have been successfully resolved. Task status updated to working: true, needs_retesting: false. ALL THREE TASKS NOW PASSING. Ready for main agent to summarize and finish."
+    -agent: "main"
+    -message: "3 NEW FRONTEND FIXES ready for testing (Issues 1,2,3). App is a PRODUCTION BUILD at http://localhost:3000 (also preview URL). Select company 'Shree Balaji Stone & Minerals' + a FY if not already. (1) ITEM DEFAULTS: Open Sale Bill (F8) -> item dropdown row 0 -> '+ Add Item' -> Full Item Master opens; VERIFY the Category dropdown auto-opens/focused and is NOT pre-filled with 'Kota Stone' (blank/-- Select Category --). Tax field should show last-used (18 on first use). (2) DROPDOWN OVERLAP: open the item dropdown on row 0 AND on a newly added item row; VERIFY '+ Add Item' and '+ Type Custom Item' show as two clean separated rows with NO overlap, and stay pinned/clear when scrolling the list. (3) SUNDRY TAX ISOLATION: hardest to set up via UI - if a series has 2 tax sundries (GST 18% + GST 5%) and items are all 18%, only the 18% sundry should be non-zero (5% sundry = 0). If not easily reproducible via UI, at least confirm no regression: a normal single-tax bill still totals correctly. NOTE: client-only SPA, no /api backend; ignore Supabase 401/PGRST console errors."

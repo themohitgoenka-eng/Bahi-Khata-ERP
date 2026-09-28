@@ -55,8 +55,15 @@ export const FullItemMasterModal: React.FC<FullItemMasterModalProps> = ({
   // Form State
   const [code, setCode] = useState('');
   const [name, setName] = useState(initialName);
-  const [taxPercent, setTaxPercent] = useState<number | string>('18');
-  const [category, setCategory] = useState('Kota Stone');
+  const [taxPercent, setTaxPercent] = useState<number | string>(() => {
+    try {
+      const last = localStorage.getItem('bahi_khata_last_item_tax');
+      return last !== null && last !== '' ? last : '18';
+    } catch {
+      return '18';
+    }
+  });
+  const [category, setCategory] = useState('');
   const [customCategory, setCustomCategory] = useState('');
   const [salesAc, setSalesAc] = useState('');
   const [purchaseAc, setPurchaseAc] = useState('');
@@ -82,6 +89,7 @@ export const FullItemMasterModal: React.FC<FullItemMasterModalProps> = ({
   const [dbUnits, setDbUnits] = useState<ItemUnit[]>([]);
 
   const nameInputRef = useRef<HTMLInputElement>(null);
+  const categorySelectRef = useRef<HTMLSelectElement>(null);
   const [showEscapeConfirm, setShowEscapeConfirm] = useState(false);
 
   // Intercept Escape key
@@ -106,8 +114,13 @@ export const FullItemMasterModal: React.FC<FullItemMasterModalProps> = ({
     if (isOpen) {
       setName(initialName);
       setCode(`ITM-${Math.floor(1000 + Math.random() * 9000)}`);
-      setTaxPercent('18');
-      setCategory('Kota Stone');
+      try {
+        const lastTax = localStorage.getItem('bahi_khata_last_item_tax');
+        setTaxPercent(lastTax !== null && lastTax !== '' ? lastTax : '18');
+      } catch {
+        setTaxPercent('18');
+      }
+      setCategory('');
       setCustomCategory('');
       setSalesAc('');
       setPurchaseAc('');
@@ -131,8 +144,31 @@ export const FullItemMasterModal: React.FC<FullItemMasterModalProps> = ({
         if (u && u.length > 0) setDbUnits(u);
       }).catch(console.error);
 
-      const t1 = setTimeout(() => nameInputRef.current?.focus(), 60);
-      const t2 = setTimeout(() => nameInputRef.current?.focus(), 160);
+      const t1 = setTimeout(() => {
+        const sel = categorySelectRef.current;
+        if (sel) {
+          try {
+            // Chromium/modern browsers: programmatically open the native dropdown
+            (sel as any).showPicker?.();
+            sel.focus();
+          } catch {
+            sel.focus();
+          }
+        } else {
+          nameInputRef.current?.focus();
+        }
+      }, 120);
+      const t2 = setTimeout(() => {
+        const sel = categorySelectRef.current;
+        if (sel && document.activeElement !== sel) {
+          try {
+            (sel as any).showPicker?.();
+            sel.focus();
+          } catch {
+            sel.focus();
+          }
+        }
+      }, 260);
       return () => {
         clearTimeout(t1);
         clearTimeout(t2);
@@ -361,6 +397,15 @@ export const FullItemMasterModal: React.FC<FullItemMasterModalProps> = ({
         }
       }
 
+      // Persist last-used tax % so next new item inherits it (settings-like)
+      try {
+        if (taxPercent !== '' && !isNaN(Number(taxPercent))) {
+          localStorage.setItem('bahi_khata_last_item_tax', String(taxPercent));
+        }
+      } catch {
+        // ignore
+      }
+
       await refreshActiveData();
       showNotification(`Item "${newItem.name}" saved successfully!`, 'success');
       onCreated(newItem);
@@ -412,6 +457,7 @@ export const FullItemMasterModal: React.FC<FullItemMasterModalProps> = ({
               </label>
               <div className="space-y-1.5">
                 <select
+                  ref={categorySelectRef}
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
                   className="w-full bg-[rgba(18,48,76,0.48)] backdrop-blur-xl border border-[rgba(112,185,245,0.25)] rounded-xl px-2.5 py-1.5 text-xs text-[#FFFFFF] focus:outline-hidden focus:border-[#2588E8] cursor-pointer"

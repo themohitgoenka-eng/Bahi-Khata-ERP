@@ -364,59 +364,67 @@ export const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
               <span>{filteredOptions.length} found</span>
             </div>
 
+            {/* Pinned Action Buttons (ADD / CUSTOM) — kept OUTSIDE the scroll area
+                so they never overlap each other or scroll under one another. */}
+            {((addOptionLabel && onAddOption) || (customOptionLabel && onCustomOption)) && (
+              <div className="shrink-0 flex flex-col border-b border-[rgba(112,185,245,0.25)]">
+                {/* + Add Option */}
+                {addOptionLabel && onAddOption && (
+                  <button
+                    type="button"
+                    data-nav-index={navItems.findIndex((it) => it.type === 'ADD')}
+                    onClick={() => {
+                      setIsOpen(false);
+                      onAddOption();
+                    }}
+                    onMouseEnter={() => {
+                      const idx = navItems.findIndex((it) => it.type === 'ADD');
+                      if (idx >= 0) setActiveIndex(idx);
+                    }}
+                    className={`w-full px-3 py-1.5 text-left flex items-center gap-2 text-xs font-bold text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 transition cursor-pointer ${
+                      activeIndex === navItems.findIndex((it) => it.type === 'ADD')
+                        ? 'ring-1 ring-amber-400 bg-amber-500/25'
+                        : ''
+                    }`}
+                  >
+                    <Plus className="w-3.5 h-3.5 shrink-0" />
+                    <span>{addOptionLabel}</span>
+                  </button>
+                )}
+
+                {/* + Custom Option */}
+                {customOptionLabel && onCustomOption && (
+                  <button
+                    type="button"
+                    data-nav-index={navItems.findIndex((it) => it.type === 'CUSTOM')}
+                    onClick={() => {
+                      setIsOpen(false);
+                      onCustomOption();
+                    }}
+                    onMouseEnter={() => {
+                      const idx = navItems.findIndex((it) => it.type === 'CUSTOM');
+                      if (idx >= 0) setActiveIndex(idx);
+                    }}
+                    className={`w-full px-3 py-1.5 text-left flex items-center gap-2 text-xs font-bold text-[#2588E8] bg-[rgba(18,48,76,0.48)] hover:bg-[rgba(57,167,255,0.2)] transition cursor-pointer ${
+                      (addOptionLabel && onAddOption) ? 'border-t border-[rgba(112,185,245,0.20)]' : ''
+                    } ${
+                      activeIndex === navItems.findIndex((it) => it.type === 'CUSTOM')
+                        ? 'ring-1 ring-[#2588E8] bg-[rgba(57,167,255,0.25)]'
+                        : ''
+                    }`}
+                  >
+                    <Plus className="w-3.5 h-3.5 shrink-0" />
+                    <span>{customOptionLabel}</span>
+                  </button>
+                )}
+              </div>
+            )}
+
             {/* Scrollable Items Container */}
             <div
               ref={scrollContainerRef}
               className="relative max-h-60 overflow-y-auto divide-y divide-[rgba(112,185,245,0.15)]/40 py-1"
             >
-              {/* + Add Option (Directly below Select / Header, sticky so it never disappears on scroll) */}
-              {addOptionLabel && onAddOption && (
-                <button
-                  type="button"
-                  data-nav-index={navItems.findIndex((it) => it.type === 'ADD')}
-                  onClick={() => {
-                    setIsOpen(false);
-                    onAddOption();
-                  }}
-                  onMouseEnter={() => {
-                    const idx = navItems.findIndex((it) => it.type === 'ADD');
-                    if (idx >= 0) setActiveIndex(idx);
-                  }}
-                  className={`w-full px-3 py-1.5 text-left flex items-center gap-2 text-xs font-bold text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 transition cursor-pointer border-b border-[rgba(112,185,245,0.25)] sticky top-0 z-10 bg-[rgba(8,27,46,0.98)] ${
-                    activeIndex === navItems.findIndex((it) => it.type === 'ADD')
-                      ? 'ring-1 ring-amber-400 bg-amber-500/25'
-                      : ''
-                  }`}
-                >
-                  <Plus className="w-3.5 h-3.5 shrink-0" />
-                  <span>{addOptionLabel}</span>
-                </button>
-              )}
-
-              {/* + Custom Option */}
-              {customOptionLabel && onCustomOption && (
-                <button
-                  type="button"
-                  data-nav-index={navItems.findIndex((it) => it.type === 'CUSTOM')}
-                  onClick={() => {
-                    setIsOpen(false);
-                    onCustomOption();
-                  }}
-                  onMouseEnter={() => {
-                    const idx = navItems.findIndex((it) => it.type === 'CUSTOM');
-                    if (idx >= 0) setActiveIndex(idx);
-                  }}
-                  className={`w-full px-3 py-1.5 text-left flex items-center gap-2 text-xs font-bold text-[#2588E8] bg-[rgba(18,48,76,0.48)] hover:bg-[rgba(57,167,255,0.2)] transition cursor-pointer border-b border-[rgba(112,185,245,0.25)] ${
-                    activeIndex === navItems.findIndex((it) => it.type === 'CUSTOM')
-                      ? 'ring-1 ring-[#2588E8] bg-[rgba(57,167,255,0.25)]'
-                      : ''
-                  }`}
-                >
-                  <Plus className="w-3.5 h-3.5 shrink-0" />
-                  <span>{customOptionLabel}</span>
-                </button>
-              )}
-
               {/* Filtered Master Items */}
               {filteredOptions.length > 0 ? (
                 filteredOptions.map((opt) => {

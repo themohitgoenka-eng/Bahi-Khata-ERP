@@ -1127,6 +1127,37 @@ export const SalesInvoiceModal: React.FC<{
     const pakkaNum = parseNumberValue(currentPakkaStr);
     const kachaNum = parseNumberValue(currentKachaStr);
 
+    // ---- Multi-tax isolation setup (Issue: 2 different tax sundries but items map to
+    // only one tax type were both calculating on the full subtotal) ----
+    // Group current item amounts by their (numeric) tax percent.
+    const itemTaxGroups = new Map<number, number>();
+    let anyItemHasTax = false;
+    items.forEach((it) => {
+      const amt = parseNumberValue(it.amount);
+      const tp = it.taxPercent;
+      const tpNum =
+        tp !== undefined && tp !== null && String(tp).trim() !== "" && !isNaN(Number(tp))
+          ? Number(tp)
+          : null;
+      if (tpNum !== null && tpNum > 0) {
+        anyItemHasTax = true;
+        itemTaxGroups.set(tpNum, (itemTaxGroups.get(tpNum) || 0) + amt);
+      }
+    });
+
+    const TAX_NAME_RE = /(GST|CGST|SGST|IGST|VAT|CESS|\bTAX\b)/i;
+    const isTaxSundryRow = (s: BillSundryRow): boolean => {
+      const upper = (s.name || "").toUpperCase().trim();
+      if (s.type === "ADD_LESS" || upper.includes("ROUND")) return false;
+      const cfgLocal = seriesSundryMap.get(upper);
+      const isPct = (s.isPercentage ?? cfgLocal?.isPercentage ?? false) || upper.includes("%");
+      const base = s.calculateOn || "SUB_TOTAL";
+      return isPct && base === "SUB_TOTAL" && TAX_NAME_RE.test(s.name || "");
+    };
+    // Only isolate when there are 2+ tax-type % sundries AND items actually carry tax info.
+    const enableTaxIsolation =
+      currentSundries.filter((s) => isTaxSundryRow(s)).length >= 2 && anyItemHasTax;
+
     // Pass 1: Recalculate percent and fixed amounts
     const updated: BillSundryRow[] = currentSundries.map((sundry) => {
       const upperName = (sundry.name || "").toUpperCase().trim();
@@ -1164,6 +1195,13 @@ export const SalesInvoiceModal: React.FC<{
           baseAmount = pakkaNum;
         } else if (calcBase === "KACHA") {
           baseAmount = kachaNum;
+        } else if (enableTaxIsolation && isTaxSundryRow(sundry)) {
+          // Isolate this tax sundry to only the items whose tax type it applies to.
+          // CGST/SGST are half-rate splits, so their target item group is rate*2.
+          const groupRate = /CGST|SGST/.test(upperName)
+            ? Number((effectiveRate * 2).toFixed(2))
+            : Number(effectiveRate.toFixed(2));
+          baseAmount = itemTaxGroups.get(groupRate) || 0;
         }
 
         const safeBase = isNaN(baseAmount) ? 0 : baseAmount;
