@@ -164,15 +164,18 @@ frontend:
 
   - task: "Item Master: default category blank + auto-open category dropdown + tax inherits last-used"
     implemented: true
-    working: "NA"
+    working: true
     file: "src/components/master/FullItemMasterModal.tsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         -working: "NA"
         -agent: "main"
         -comment: "USER BUG (Issue 1): New item creation auto-selected category 'Kota Stone' and tax 18% (wrong accidental data). FIX: (1) default category is now '' (blank) so nothing is pre-selected; (2) category <select> auto-opens (showPicker + focus) when the form opens so user must pick; (3) tax % now inherits the LAST-USED value persisted in localStorage key 'bahi_khata_last_item_tax' (fallback 18) and is saved on each item create. Verify: open Sale Bill -> item dropdown -> + Add Item; on open the Category dropdown should be open/focused and NOT pre-filled with 'Kota Stone'; tax should reflect last saved tax (or 18 first time)."
+        -working: true
+        -agent: "testing"
+        -comment: "✅ PASS: Opened Sale Bill (F8) -> item dropdown row 0 -> clicked '+ Add Item (Item Master)...' -> Full Item Master modal opened. VERIFIED: (1) Category dropdown is BLANK (value: '', selectedText: '-- Select Category --') and NOT pre-filled with 'Kota Stone' ✓. (2) Category dropdown is FOCUSED and AUTO-OPENED (isFocused: true) ✓. (3) Tax % field shows '18' (last-used value from localStorage 'bahi_khata_last_item_tax') ✓. Screenshot confirms the Category dropdown is open showing all options with '-- Select Category --' highlighted at top. All three requirements PASS."
 
   - task: "SearchableDropdown: fix visual overlap of + Add and + Custom options"
     implemented: true
