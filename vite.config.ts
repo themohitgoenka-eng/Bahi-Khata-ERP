@@ -52,8 +52,18 @@ export default defineConfig(() => {
       headers: {
         'Access-Control-Allow-Origin': '*',
       },
-      hmr: process.env.DISABLE_HMR === 'true' ? false : { clientPort: 443, protocol: 'wss' },
-      watch: process.env.DISABLE_HMR === 'true' ? null : {},
+    },
+    // Production preview server (no HMR websocket => zero auto-refresh).
+    // Supervisor runs `yarn dev` => `vite build && vite preview`.
+    preview: {
+      host: '0.0.0.0',
+      port: 3000,
+      strictPort: true,
+      cors: true,
+      allowedHosts: true,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+      },
     },
   };
 });

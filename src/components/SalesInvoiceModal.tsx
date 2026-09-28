@@ -563,7 +563,7 @@ export const SalesInvoiceModal: React.FC<{
   };
 
   // Determine unit and dual unit capabilities from selected item
-  const getItemUnitInfo = (itemName: string) => {
+  const getItemUnitInfo = (itemName: string, explicitItem?: InventoryItem) => {
     if (!itemName) {
       return {
         mainUnit: isSpareParts ? "NOS" : "SQFT",
@@ -576,7 +576,7 @@ export const SalesInvoiceModal: React.FC<{
         item: null,
       };
     }
-    const found = findMasterItem(itemName);
+    const found = explicitItem || findMasterItem(itemName);
     if (found) {
       const mainUnit = found.primaryUnit || (isSpareParts ? "NOS" : "SQFT");
       const altUnit = found.alternateUnit?.trim() || "PCS";
@@ -635,7 +635,7 @@ export const SalesInvoiceModal: React.FC<{
     }
 
     if (quickItemRowIndex !== null && quickItemRowIndex >= 0 && quickItemRowIndex < items.length) {
-      handleItemSelect(quickItemRowIndex, newItem.name);
+      handleItemSelect(quickItemRowIndex, newItem.name, newItem);
       setTimeout(() => {
         const el = document.getElementById(`sales_item_dropdown_${quickItemRowIndex}`) || document.getElementById(`sales_item_input_${quickItemRowIndex}`);
         el?.focus();
@@ -644,7 +644,7 @@ export const SalesInvoiceModal: React.FC<{
     setQuickItemModalOpen(false);
   };
 
-  const handleItemSelect = (index: number, selectedName: string) => {
+  const handleItemSelect = (index: number, selectedName: string, explicitItem?: InventoryItem) => {
     if (selectedName === "__ADD_ITEM__") {
       setQuickItemRowIndex(index);
       setQuickItemModalOpen(true);
@@ -656,7 +656,7 @@ export const SalesInvoiceModal: React.FC<{
       return;
     }
 
-    const unitInfo = getItemUnitInfo(selectedName);
+    const unitInfo = getItemUnitInfo(selectedName, explicitItem);
     const updated = [...items];
     updated[index] = {
       ...updated[index],
@@ -664,11 +664,13 @@ export const SalesInvoiceModal: React.FC<{
       unit: unitInfo.mainUnit,
     };
 
-    const found = masterItems.find(
+    const found = explicitItem || masterItems.find(
       (m) => m.name.trim().toLowerCase() === selectedName.trim().toLowerCase()
     );
     if (found) {
-      const itemAc = isPurchase ? found.purchaseAc : found.salesAc;
+      const itemAc = isPurchase
+        ? (found.purchaseAccountId || found.purchaseAc)
+        : (found.salesAccountId || found.salesAc);
       if (itemAc && !updated[index].ledger) {
         updated[index].ledger = itemAc;
       }
