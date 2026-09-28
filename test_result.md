@@ -198,6 +198,42 @@ frontend:
         -agent: "main"
         -comment: "USER BUG (Issue 3): When a series has 2 different tax sundries (e.g. GST 18% and GST 5%) but the bill's items all map to ONE tax type, BOTH percentage tax sundries were calculating on the full subtotal. FIX in recalculateSundries(): group current item amounts by item.taxPercent; when there are >=2 tax-type percentage sundries (name matches GST/CGST/SGST/IGST/VAT/CESS/TAX) with calculateOn=SUB_TOTAL AND at least one item carries a tax %, each tax sundry now calculates ONLY on the sum of items whose tax rate it applies to (CGST/SGST use rate*2 as the target item group; IGST/GST use the rate directly). Non-matching tax sundries become 0. SAFETY: isolation only triggers with 2+ tax sundries + taxed items, so single-GST and CGST+SGST(same rate) bills keep computing on full subtotal as before. Verify: series with GST 18% + GST 5% sundries; add only 18% items -> 18% sundry = itemTotal*18%, 5% sundry = 0. Add mixed 18% & 5% items -> each sundry = its own group * rate. Also verify a normal single-tax bill still calculates on full subtotal."
 
+  - task: "Sundry Calculate-On dropdown must NOT auto-default to Sub Total (blank, manual select)"
+    implemented: true
+    working: "NA"
+    file: "src/components/SalesInvoiceModal.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        -working: "NA"
+        -agent: "main"
+        -comment: "USER BUG (Issue 4): In Bill Sundries the 'Calculate On' dropdown auto-showed 'Sub Total' by default. User wants it BLANK by default and manually selected; NO calculation-logic change. FIX (UI/state only, numbers unchanged): (a) new/added sundries + series-default sundries no longer set calculateOn (undefined) -> creation sites changed from 'SUB_TOTAL' to undefined; (b) recalculateSundries now preserves sundry.calculateOn in its output instead of writing back the 'SUB_TOTAL' fallback (calculation still uses the SUB_TOTAL fallback internally, so amounts are IDENTICAL); (c) dropdown value binds to (calculateOn || '') and a new '-- Select --' blank option added; onChange sets undefined when blank chosen. Verify: add a tax sundry -> Calculate On shows blank '-- Select --' (not Sub Total); amounts still compute; user can manually pick Sub Total/Pakka/Kacha."
+
+  - task: "Kacha field reciprocal auto-calc (Pakka = Grand Total - Kacha)"
+    implemented: true
+    working: "NA"
+    file: "src/components/SalesInvoiceModal.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        -working: "NA"
+        -agent: "main"
+        -comment: "USER BUG (Issue 5): Editing the Kacha field did not auto-calculate. Since Pakka + Kacha = Grand Total, handleKachaChange/handleKachaBlur now auto-compute Pakka = Grand Total - Kacha when a valid Kacha is typed (and clear Pakka when Kacha cleared), and recalc Pakka/Kacha-based sundries. Existing Pakka->Kacha auto-calc unchanged. Verify: enter a Kacha value -> Pakka updates to (Grand Total - Kacha); clearing Kacha clears Pakka."
+
+  - task: "Global SearchableDropdown ordering: numbers before alphabets + advanced multi-word search"
+    implemented: true
+    working: "NA"
+    file: "src/components/common/SearchableDropdown.tsx, src/utils/searchUtils.ts"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+        -working: "NA"
+        -agent: "main"
+        -comment: "USER FEATURE (Issue 6): Unified dropdown ordering + advanced search across all dropdowns using the shared SearchableDropdown. Added smartCompare() in searchUtils (number-first, then natural numeric-aware alphabetic order) and applied it to SearchableDropdown filteredOptions (both filtered and unfiltered). Advanced multi-token substring search (matchesAdvancedSearch) already present and retained. Verify: open any item/ledger dropdown -> entries starting with digits appear before alphabetic ones; 'Item 2' sorts before 'Item 10'; typing 2nd/3rd word still filters."
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
@@ -209,6 +245,9 @@ test_plan:
     - "Item Master: default category blank + auto-open category dropdown + tax inherits last-used"
     - "SearchableDropdown: fix visual overlap of + Add and + Custom options"
     - "Sale Bill sundry tax isolation: multi tax sundries calc only on matching item tax group"
+    - "Sundry Calculate-On dropdown must NOT auto-default to Sub Total (blank, manual select)"
+    - "Kacha field reciprocal auto-calc (Pakka = Grand Total - Kacha)"
+    - "Global SearchableDropdown ordering: numbers before alphabets + advanced multi-word search"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"

@@ -1230,7 +1230,7 @@ export const SalesInvoiceModal: React.FC<{
           ...sundry,
           rate: safeRate.toFixed(2),
           isPercentage: true,
-          calculateOn: calcBase,
+          calculateOn: sundry.calculateOn,
           amount: finalAmt.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
           type: sundry.type || cfg?.type || "ADD",
         };
@@ -1242,7 +1242,7 @@ export const SalesInvoiceModal: React.FC<{
           ...sundry,
           rate: fixedAmt.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
           isPercentage: false,
-          calculateOn: calcBase,
+          calculateOn: sundry.calculateOn,
           amount: fixedAmt.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
           type: sundry.type || cfg.type || "ADD",
         };
@@ -1251,7 +1251,7 @@ export const SalesInvoiceModal: React.FC<{
       const safeAmt = parseNumberValue(sundry.amount);
       return {
         ...sundry,
-        calculateOn: calcBase,
+        calculateOn: sundry.calculateOn,
         amount: safeAmt !== 0 ? safeAmt.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : (sundry.amount && String(sundry.amount).toLowerCase() !== "nan" ? sundry.amount : "0.00"),
       };
     });
@@ -1321,7 +1321,7 @@ export const SalesInvoiceModal: React.FC<{
           type: s.type,
           rate: s.amount,
           isPercentage: s.isPercentage,
-          calculateOn: "SUB_TOTAL" as const,
+          calculateOn: undefined,
         }));
         setBillSundries(recalculateSundries(initialSundries, itemTotal, newSeriesName, pakka, kacha));
       } else {
@@ -1347,7 +1347,7 @@ export const SalesInvoiceModal: React.FC<{
             type: s.type,
             rate: s.amount,
             isPercentage: s.isPercentage,
-            calculateOn: "SUB_TOTAL" as const,
+            calculateOn: undefined,
           }));
           setBillSundries(recalculateSundries(initialSundries, itemTotal, activeConf.seriesName, pakka, kacha));
         }
@@ -3810,7 +3810,7 @@ export const SalesInvoiceModal: React.FC<{
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
-                        onClick={() => setBillSundries([...billSundries, { name: "", amount: 0, type: "ADD", rate: 0, isPercentage: false, calculateOn: "SUB_TOTAL" }])}
+                        onClick={() => setBillSundries([...billSundries, { name: "", amount: 0, type: "ADD", rate: 0, isPercentage: false, calculateOn: undefined }])}
                         className="px-2.5 py-1 bg-white/5 hover:bg-white/10 text-gray-300 rounded text-xs font-bold uppercase flex items-center gap-1 cursor-pointer border border-white/10"
                       >
                         <Plus className="w-3.5 h-3.5 text-amber-400" /> Add Sundry
@@ -3978,11 +3978,13 @@ export const SalesInvoiceModal: React.FC<{
                           <div className="w-28 shrink-0">
                             <select
                               disabled={!isEditableBase}
-                              value={isEditableBase ? (sundry.calculateOn || "SUB_TOTAL") : ""}
+                              value={isEditableBase ? (sundry.calculateOn || "") : ""}
                               onChange={(e) => {
-                                const newBase = e.target.value as "SUB_TOTAL" | "PAKKA" | "KACHA";
+                                const val = e.target.value;
                                 const copy = [...billSundries];
-                                copy[sIdx].calculateOn = newBase;
+                                copy[sIdx].calculateOn = val === ""
+                                  ? undefined
+                                  : (val as "SUB_TOTAL" | "PAKKA" | "KACHA");
                                 const recalculated = recalculateSundries(copy, itemTotal, series, pakka, kacha);
                                 setBillSundries(recalculated);
                               }}
@@ -4001,6 +4003,7 @@ export const SalesInvoiceModal: React.FC<{
                             >
                               {isEditableBase ? (
                                 <>
+                                  <option value="">-- Select --</option>
                                   <option value="SUB_TOTAL">Sub Total</option>
                                   <option value="PAKKA">Pakka</option>
                                   <option value="KACHA">Kacha</option>
@@ -4239,7 +4242,7 @@ export const SalesInvoiceModal: React.FC<{
                     type: s.type,
                     rate: s.amount,
                     isPercentage: s.isPercentage,
-                    calculateOn: "SUB_TOTAL" as const,
+                    calculateOn: undefined,
                   }));
                   setBillSundries(recalculateSundries(initialSundries, itemTotal, conf.seriesName, pakka, kacha));
                 }
